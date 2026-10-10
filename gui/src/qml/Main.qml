@@ -22,11 +22,65 @@ Item {
     RentPassTimer {
         id: sessionTimer
         onTimeExpired: {
-            console.log("RentPass session time expired, disconnecting")
-            sessionTimer.stop()
-            showMainView()
-            timeExpiredDialog.open()
+            console.log("RentPass session time expired, force logout")
+            forceLogout("time")
         }
+    }
+
+    // Periodic server check: if admin disables the ID, app logs out
+    Timer {
+        id: validateTimer
+        interval: 60000
+        repeat: true
+        onTriggered: {
+            if (root.sessionUsername !== "") {
+                validateSession()
+            }
+        }
+    }
+
+    function validateSession() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", "http://52.66.13.171:8002/api/auth/validate")
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.timeout = 10000
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText)
+                    if (!resp.valid) {
+                        console.log("RentPass session invalidated by server, force logout")
+                        forceLogout("disabled")
+                    }
+                } catch (e) {}
+            }
+        }
+        xhr.send(JSON.stringify({username: root.sessionUsername, session_token: root.sessionToken}))
+    }
+
+    function forceLogout(reason) {
+        sessionTimer.stop()
+        validateTimer.stop()
+        // Properly terminate the stream session
+        try { Chiaki.stopSession(false) } catch (e) { console.log("stopSession: " + e) }
+        root.sessionUsername = ""
+        root.sessionToken = ""
+        root.sessionDurationMinutes = 60
+        // Back to login screen
+        stack.replace(stack.get(0), rentPassLoginComponent)
+        if (reason === "time") {
+            timeExpiredDialog.open()
+        } else if (reason === "disabled") {
+            accountDisabledDialog.open()
+        }
+    }
+
+    function startSessionTimers() {
+        // Called after login success: countdown starts immediately
+        sessionTimer.sessionDuration = root.sessionDurationMinutes * 60
+        sessionTimer.start()
+        validateTimer.start()
+        console.log("RentPass timers started: " + root.sessionDurationMinutes + " min for " + root.sessionUsername)
     }
 
     Dialog {
@@ -36,6 +90,18 @@ Item {
         anchors.centerIn: parent
         Label {
             text: "Aapka time khatam ho gaya hai.\nDobara khelne ke liye nayi ID lein."
+            horizontalAlignment: Text.AlignHCenter
+        }
+        standardButtons: Dialog.Ok
+    }
+
+    Dialog {
+        id: accountDisabledDialog
+        title: "RentPass"
+        modal: true
+        anchors.centerIn: parent
+        Label {
+            text: "Aapki ID band kar di gayi hai.\nRentPass se sampark karein."
             horizontalAlignment: Text.AlignHCenter
         }
         standardButtons: Dialog.Ok
@@ -168,12 +234,6 @@ Item {
 
     function showStreamView() {
         stack.replace(stack.get(0), streamViewComponent);
-        // Start the RentPass session countdown when stream begins
-        if (root.sessionUsername !== "") {
-            sessionTimer.sessionDuration = root.sessionDurationMinutes * 60
-            sessionTimer.start()
-            console.log("RentPass session timer started: " + root.sessionDurationMinutes + " min for " + root.sessionUsername)
-        }
     }
 
     function showPsnView() {
@@ -608,6 +668,7 @@ Item {
                 root.sessionUsername = username
                 root.sessionDurationMinutes = durationMinutes
                 root.sessionToken = sessionToken
+                root.startSessionTimers()
                 showMainView()
             }
             onLoginFailed: function(message) {
