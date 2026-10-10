@@ -11,8 +11,35 @@ Item {
     property bool initialAsk: false
     readonly property bool preferSeparateStreamSettingsWindows: Chiaki.window.runtimeRendererBackend === 1 && Chiaki.session
     property bool useSeparateStreamSettingsWindows: false
+    // RentPass session info (set after real server login)
+    property string sessionUsername: ""
+    property int sessionDurationMinutes: 60
+    property string sessionToken: ""
     Material.theme: Material.Dark
     Material.accent: "#00a7ff"
+
+    // Session timer: counts down the customer's purchased time
+    RentPassTimer {
+        id: sessionTimer
+        onTimeExpired: {
+            console.log("RentPass session time expired, disconnecting")
+            sessionTimer.stop()
+            showMainView()
+            timeExpiredDialog.open()
+        }
+    }
+
+    Dialog {
+        id: timeExpiredDialog
+        title: "RentPass"
+        modal: true
+        anchors.centerIn: parent
+        Label {
+            text: "Aapka time khatam ho gaya hai.\nDobara khelne ke liye nayi ID lein."
+            horizontalAlignment: Text.AlignHCenter
+        }
+        standardButtons: Dialog.Ok
+    }
 
     function controllerButton(name) {
         let type = "deck";
@@ -141,6 +168,12 @@ Item {
 
     function showStreamView() {
         stack.replace(stack.get(0), streamViewComponent);
+        // Start the RentPass session countdown when stream begins
+        if (root.sessionUsername !== "") {
+            sessionTimer.sessionDuration = root.sessionDurationMinutes * 60
+            sessionTimer.start()
+            console.log("RentPass session timer started: " + root.sessionDurationMinutes + " min for " + root.sessionUsername)
+        }
     }
 
     function showPsnView() {
@@ -570,8 +603,11 @@ Item {
     Component {
         id: rentPassLoginComponent
         RentPassLogin {
-            onLoginSuccess: function(username) {
-                console.log("RentPass login success: " + username)
+            onLoginSuccess: function(username, durationMinutes, sessionToken) {
+                console.log("RentPass login success: " + username + " (" + durationMinutes + " min)")
+                root.sessionUsername = username
+                root.sessionDurationMinutes = durationMinutes
+                root.sessionToken = sessionToken
                 showMainView()
             }
             onLoginFailed: function(message) {
