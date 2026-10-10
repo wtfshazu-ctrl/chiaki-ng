@@ -89,7 +89,7 @@ Item {
         modal: true
         anchors.centerIn: parent
         Label {
-            text: "Aapka time khatam ho gaya hai.\nDobara khelne ke liye nayi ID lein."
+            text: "Your time has expired.\nPlease get a new ID to play again."
             horizontalAlignment: Text.AlignHCenter
         }
         standardButtons: Dialog.Ok
@@ -101,7 +101,7 @@ Item {
         modal: true
         anchors.centerIn: parent
         Label {
-            text: "Aapki ID band kar di gayi hai.\nRentPass se sampark karein."
+            text: "Your ID has been deactivated.\nPlease contact RentPass."
             horizontalAlignment: Text.AlignHCenter
         }
         standardButtons: Dialog.Ok
