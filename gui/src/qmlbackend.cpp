@@ -1149,7 +1149,7 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
             return;
 
         if (chiaki_quit_reason_is_error(reason)) {
-            QString m = tr("Chiaki Session has quit") + ":\n" + chiaki_quit_reason_string(reason);
+            QString m = tr("RentPass Session has quit") + ":\n" + chiaki_quit_reason_string(reason);
             if (!reason_str.isEmpty())
                 m += "\n" + tr("Reason") + ": \"" + reason_str + "\"";
             emit sessionError(tr("Session has quit"), m);

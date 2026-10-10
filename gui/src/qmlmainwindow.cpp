@@ -2871,7 +2871,7 @@ void QmlMainWindow::setSettings(Settings *new_settings)
     if(profile.isEmpty())
         QGuiApplication::setApplicationDisplayName("RentPass");
     else
-        QGuiApplication::setApplicationDisplayName(QString("chiaki-ng:%1").arg(profile));
+        QGuiApplication::setApplicationDisplayName(QString("RentPass:%1").arg(profile));
     this->setTitle(QGuiApplication::applicationDisplayName());
 }
 
