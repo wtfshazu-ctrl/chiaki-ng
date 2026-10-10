@@ -5,10 +5,11 @@ import QtQuick.Controls.Material
 
 Item {
     id: root
-    signal loginSuccess(string username)
+    signal loginSuccess(string username, int durationMinutes, string sessionToken)
     signal loginFailed(string message)
 
-    property string apiUrl: "https://rentpass.store/api/rentpass-auth"
+    property string apiUrl: "http://52.66.13.171:8002/api/auth/login"
+    property bool busy: false
 
     Material.theme: Material.Dark
     Material.accent: "#96a6fd"
@@ -24,7 +25,7 @@ Item {
 
             // Logo
             Image {
-                source: "qrc:/res/pre-logo.png"
+                source: "qrc:/icons/pre-logo.png"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 200
                 Layout.preferredHeight: 120
@@ -48,9 +49,10 @@ Item {
 
             TextField {
                 id: usernameField
-                placeholderText: "Username / Email"
+                placeholderText: "Customer ID"
                 Layout.fillWidth: true
                 Material.accent: "#96a6fd"
+                enabled: !root.busy
             }
 
             TextField {
@@ -59,6 +61,7 @@ Item {
                 echoMode: TextInput.Password
                 Layout.fillWidth: true
                 Material.accent: "#96a6fd"
+                enabled: !root.busy
                 onAccepted: loginButton.clicked()
             }
 
@@ -71,21 +74,20 @@ Item {
                 visible: text !== ""
             }
 
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                visible: root.busy
+                running: root.busy
+            }
+
             Button {
                 id: loginButton
-                text: "Login"
+                text: root.busy ? "Checking..." : "Login"
                 Layout.fillWidth: true
                 Material.background: "#6b4fd8"
-                enabled: usernameField.text !== "" && passwordField.text !== ""
+                enabled: !root.busy && usernameField.text !== "" && passwordField.text !== ""
                 onClicked: {
-                    // TODO: Verify against rentpass.store API
-                    // For now, accept any non-empty credentials
-                    // In production, this will call the API
-                    if (usernameField.text !== "" && passwordField.text !== "") {
-                        root.loginSuccess(usernameField.text)
-                    } else {
-                        root.loginFailed("Please enter username and password")
-                    }
+                    doLogin()
                 }
             }
 
@@ -96,6 +98,56 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
             }
         }
+    }
+
+    function doLogin() {
+        errorLabel.text = ""
+        root.busy = true
+        var xhr = new XMLHttpRequest()
+        xhr.open("POST", root.apiUrl)
+        xhr.setRequestHeader("Content-Type", "application/json")
+        xhr.timeout = 15000
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                root.busy = false
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText)
+                        if (resp.ok) {
+                            var dur = parseInt(resp.duration_minutes) || 60
+                            root.loginSuccess(resp.username || usernameField.text, dur, resp.session_token || "")
+                        } else {
+                            root.showError(resp.error || "Login failed")
+                            root.loginFailed(resp.error || "Login failed")
+                        }
+                    } catch (e) {
+                        root.showError("Server error, try again")
+                        root.loginFailed("Server error")
+                    }
+                } else if (xhr.status === 401) {
+                    root.showError("Galat ID ya password")
+                    root.loginFailed("Invalid credentials")
+                } else {
+                    root.showError("Server se connect nahi ho paya")
+                    root.loginFailed("Connection failed")
+                }
+            }
+        }
+        xhr.ontimeout = function() {
+            root.busy = false
+            root.showError("Server timeout, try again")
+            root.loginFailed("Timeout")
+        }
+        xhr.onerror = function() {
+            root.busy = false
+            root.showError("Server se connect nahi ho paya")
+            root.loginFailed("Connection failed")
+        }
+        var payload = JSON.stringify({
+            username: usernameField.text,
+            password: passwordField.text
+        })
+        xhr.send(payload)
     }
 
     function showError(msg) {
