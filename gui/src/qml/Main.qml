@@ -669,12 +669,38 @@ Item {
                 root.sessionDurationMinutes = durationMinutes
                 root.sessionToken = sessionToken
                 root.startSessionTimers()
+                root.fetchPs5Config()
                 showMainView()
             }
             onLoginFailed: function(message) {
                 console.log("RentPass login failed: " + message)
             }
         }
+    }
+
+    // Zero-config: fetch PS5 IP from server and auto-add as manual host
+    property string ps5Ip: ""
+    function fetchPs5Config() {
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", "http://52.66.13.171:8002/api/ps5/config")
+        xhr.timeout = 10000
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                try {
+                    var resp = JSON.parse(xhr.responseText)
+                    if (resp.ok && resp.config && resp.config.ps5_ip) {
+                        root.ps5Ip = resp.config.ps5_ip
+                        console.log("RentPass PS5 IP from server: " + root.ps5Ip)
+                        // Auto-add PS5 as manual host (index 0)
+                        try {
+                            Chiaki.addManualHost(0, root.ps5Ip)
+                            console.log("RentPass PS5 auto-added as manual host")
+                        } catch (e) { console.log("addManualHost: " + e) }
+                    }
+                } catch (e) { console.log("PS5 config parse: " + e) }
+            }
+        }
+        xhr.send()
     }
 
     Component {
