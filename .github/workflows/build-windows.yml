@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         vcpkg integrate install
-        vcpkg install ffmpeg:x64-windows openssl:x64-windows sdl2:x64-windows opus:x64-windows
+        vcpkg install
 
     - name: Configure CMake
       run: |
@@ -44,7 +44,6 @@ jobs:
       run: |
         mkdir dist
         cp build/gui/Release/*.exe dist/
-        # Copy Qt DLLs
         windeployqt --release dist/RentPass.exe
 
     - name: Upload artifact
