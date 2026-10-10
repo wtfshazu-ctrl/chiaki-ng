@@ -18,6 +18,8 @@
     <file>ProfileDialog.qml</file>
     <file>ConsolePinDialog.qml</file>
     <file>PSNLoginDialog.qml</file>
+    <file>RentPassLogin.qml</file>
+    <file>RentPassTimer.qml</file>
     <file>PSNTokenDialog.qml</file>
     <file>ControllerMappingDialog.qml</file>
     <file>AutoConnectView.qml</file>

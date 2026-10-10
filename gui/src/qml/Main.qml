@@ -258,7 +258,7 @@ Item {
         id: stack
         anchors.fill: parent
         hoverEnabled: false
-        initialItem: mainViewComponent
+        initialItem: rentPassLoginComponent
         font.pixelSize: 20
 
         replaceEnter: Transition {
@@ -565,6 +565,19 @@ Item {
     Component {
         id: mainViewComponent
         MainView { }
+    }
+
+    Component {
+        id: rentPassLoginComponent
+        RentPassLogin {
+            onLoginSuccess: function(username) {
+                console.log("RentPass login success: " + username)
+                showMainView()
+            }
+            onLoginFailed: function(message) {
+                console.log("RentPass login failed: " + message)
+            }
+        }
     }
 
     Component {
