@@ -29,6 +29,7 @@ extern "C" {
 #include <QStandardPaths>
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <QCursor>
 #include <QFile>
 #include <QWidget>
 #include <QLabel>
@@ -7572,7 +7573,20 @@ bool QmlMainWindow::event(QEvent *event)
             return true;
         if (session && !grab_input) {
             if (event->type() == QEvent::MouseMove)
+            {
                 session->HandleMouseMoveEvent(static_cast<QMouseEvent*>(event), width(), height());
+                if(settings->GetMouseAssistEnabled())
+                {
+                    // Mouse Assist: keep the cursor centred so turning never stops
+                    // at the window edge (PC mouse-look). The warp makes a synthetic
+                    // move event, which is dropped above, so it cannot feed back
+                    // into the camera.
+                    QPoint center(width() / 2, height() / 2);
+                    QCursor::setPos(mapToGlobal(center));
+                    session->ResetMouseAssistPosition((float)center.x(), (float)center.y());
+                    setCursor(Qt::BlankCursor);
+                }
+            }
             else if (event->type() == QEvent::MouseButtonPress)
                 session->HandleMousePressEvent(static_cast<QMouseEvent*>(event));
             else if (event->type() == QEvent::MouseButtonRelease)

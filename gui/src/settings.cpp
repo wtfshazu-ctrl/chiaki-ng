@@ -1011,6 +1011,24 @@ void Settings::SetMouseTouchEnabled(bool enabled)
 	settings.setValue("settings/mouse_touch_enabled", enabled);
 }
 
+bool Settings::GetMouseAssistEnabled() const
+{
+	return settings.value("settings/mouse_assist_enabled", true).toBool();
+}
+void Settings::SetMouseAssistEnabled(bool enabled)
+{
+	settings.setValue("settings/mouse_assist_enabled", enabled);
+}
+
+float Settings::GetMouseAssistSensitivity() const
+{
+	return settings.value("settings/mouse_assist_sensitivity", 1.0).toFloat();
+}
+void Settings::SetMouseAssistSensitivity(float sensitivity)
+{
+	settings.setValue("settings/mouse_assist_sensitivity", sensitivity);
+}
+
 
 bool Settings::GetDpadTouchEnabled() const
 {
