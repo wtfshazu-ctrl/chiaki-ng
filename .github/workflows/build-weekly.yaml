@@ -209,7 +209,7 @@ jobs:
 
       - name: Rename installer
         run: |
-          cp chiaki-ng-windows-installer.exe chiaki-ng-win_x64-MSYS2-installer.exe
+          cp RentPass-windows-installer.exe chiaki-ng-win_x64-MSYS2-installer.exe
 
       - name: Upload chiaki-ng Artifact
         uses: nanoufo/action-upload-artifacts-and-release-assets@v2
@@ -336,7 +336,7 @@ jobs:
 
       - name: Rename installer
         run: |
-          cp chiaki-ng-windows-installer.exe chiaki-ng-win_arm64-MSYS2-installer.exe
+          cp RentPass-windows-installer.exe chiaki-ng-win_arm64-MSYS2-installer.exe
 
       - name: Upload chiaki-ng Artifact
         uses: nanoufo/action-upload-artifacts-and-release-assets@v2
